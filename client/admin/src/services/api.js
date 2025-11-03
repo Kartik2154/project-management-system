@@ -87,9 +87,9 @@ export const evaluationParameterAPI = {
 
 // ✅ Admin API
 export const adminAPI = {
-  getProfile: () => api.get("/admin/profile"),
-  updateProfile: (payload) => api.put("/admin/profile", payload),
-  changePassword: (payload) => api.post("/admin/change-password", payload),
+  getProfile: () => api.get("/profile"),
+  updateProfile: (payload) => api.put("/profile", payload),
+  changePassword: (payload) => api.post("/change-password", payload),
 };
 
 // ✅ Exam Schedules API

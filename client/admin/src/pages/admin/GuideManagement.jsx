@@ -122,10 +122,7 @@ function GuideManagement() {
       import.meta.env.VITE_API_URL || "http://localhost:5000/api"
     ).replace(/\/admin$/, "");
 
-    console.log("Using base URL:", API_BASE_URL);
-
     const adminToken = localStorage.getItem("token");
-    console.log("Admin token found:", adminToken ? "✅ Yes" : "❌ No");
 
     try {
       const res = await axios.put(
