@@ -21,6 +21,7 @@ import {
   getAvailableStudents,
   getStudentsByGroup,
   updateGroup,
+  setGuideLimit,
   deleteGroup,
   updateGroupGuide,
   getEvaluationParams,
@@ -54,6 +55,7 @@ import {
   getAllStudents,
   getStudentById,
   updateStudent,
+  getGuideLimit,
   // updateGroupDetails,
 } from "../../controllers/admin/adminController.js";
 import { protectAdmin } from "../../middlewares/authMiddleware.js";
@@ -246,5 +248,9 @@ router.put("/students/:id", updateStudent);
 
 // DELETE /api/admin/students/:id
 router.delete("/students/:id", removeStudentById);
+
+router.put("/set-guide-limit", setGuideLimit);
+
+router.get("/get-guide-limit", getGuideLimit);
 
 export default router;
