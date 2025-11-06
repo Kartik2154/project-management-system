@@ -59,6 +59,7 @@ import {
   createNotification,
   markNotificationAsRead,
   markAllNotificationsRead,
+  saveAllProjectEvaluations,
   // updateGroupDetails,
 } from "../../controllers/admin/adminController.js";
 
@@ -273,10 +274,8 @@ router.patch("/notifications/mark-all-read", markAllNotificationsRead);
 // GET all parameters
 // // Parameters
 // router.get("/get-evaluation-params", protectAdmin, getEvaluationParameters);
-// POST save all marks
-// router.post(
-//   "/get-group-evaluation/:groupId/evaluate",
-//   protectAdmin,
-//   saveEvaluation
-// );
+router.post(
+  "/save-all-project-evaluations/:groupId",
+  saveAllProjectEvaluations
+);
 export default router;

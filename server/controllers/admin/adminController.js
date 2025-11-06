@@ -2508,6 +2508,47 @@ export const updateStudent = async (req, res) => {
   }
 };
 
+// ✅ Save all project evaluations for a group
+export const saveAllProjectEvaluations = async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const { evaluations } = req.body;
+
+    if (!Array.isArray(evaluations)) {
+      return res.status(400).json({
+        success: false,
+        message: "Evaluations must be an array",
+      });
+    }
+
+    // Delete existing evaluations for the group
+    await ProjectEvaluation.deleteMany({ projectId: groupId });
+
+    // Insert new evaluations
+    if (evaluations.length > 0) {
+      const docs = evaluations.map((e) => ({
+        projectId: groupId,
+        studentId: e.student,
+        parameterId: e.parameter,
+        marks: Number(e.marks),
+        evaluatedBy: req.admin.id, // assuming admin is evaluating
+      }));
+      await ProjectEvaluation.insertMany(docs);
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "All evaluations saved successfully",
+    });
+  } catch (err) {
+    console.error("❌ Error saving project evaluations:", err.message);
+    res.status(500).json({
+      success: false,
+      message: "Server error while saving evaluations",
+    });
+  }
+};
+
 // ✅ Get current limit (helper)
 export const getGuideLimit = async (req, res) => {
   try {

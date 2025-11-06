@@ -114,7 +114,9 @@ export const courseAnnouncementAPI = {
 
 // ✅ Project Evaluations API – FINAL & FULLY WORKING
 export const projectEvaluationAPI = {
-  getByProject: (groupId) => api.get(`/get-project-evaluation/${groupId}`), // ← पुराना वाला
+  getByProject: (groupId) => api.get(`/get-group-evaluation/${groupId}`),
+  saveAll: (groupId, evaluations) =>
+    api.post(`/save-all-project-evaluations/${groupId}`, { evaluations }),
 };
 // ✅ Guide Announcements API
 export const guideAnnouncementAPI = {

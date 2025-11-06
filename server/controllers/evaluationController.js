@@ -18,15 +18,39 @@ export const getProjectEvaluationById = async (req, res) => {
 
     const group = await Group.findById(groupId)
       .populate("students", "name enrollmentNumber _id")
-      .select("projectTitle projectTechnology status students");
+      .populate({
+        path: "membersSnapshot",
+        populate: {
+          path: "studentRef",
+          select: "name enrollmentNumber _id",
+        },
+      })
+      .select("projectTitle projectTechnology status students membersSnapshot");
 
     if (!group) {
       return res.status(404).json({ message: "Group not found" });
     }
 
+    // Construct students array from either membersSnapshot or students
+    const students =
+      group.membersSnapshot && group.membersSnapshot.length > 0
+        ? group.membersSnapshot.map((m) => ({
+            _id: m.studentRef?._id,
+            name: m.studentRef?.name || "Unknown",
+            enrollmentNumber: m.studentRef?.enrollmentNumber || "N/A",
+          }))
+        : group.students.map((s) => ({
+            _id: s._id,
+            name: s.name,
+            enrollmentNumber: s.enrollmentNumber,
+          }));
+
     res.json({
       success: true,
-      data: group, // बस पूरा group भेज दो – student list आएगी!
+      data: {
+        ...group.toObject(),
+        students, // Override with constructed students array
+      },
     });
   } catch (error) {
     console.error("getProjectEvaluationById error:", error);
