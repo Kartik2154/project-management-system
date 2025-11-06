@@ -59,12 +59,15 @@ import {
   createNotification,
   markNotificationAsRead,
   markAllNotificationsRead,
-  saveAllProjectEvaluations,
   getGroupProjectEvaluations,
   // updateGroupDetails,
 } from "../../controllers/admin/adminController.js";
 
-import { getProjectEvaluationById } from "../../controllers/evaluationController.js";
+import {
+  getProjectEvaluationById,
+  getProjectEvaluationsByGroup,
+  saveAllProjectEvaluations,
+} from "../../controllers/evaluationController.js";
 
 import { protectAdmin } from "../../middlewares/authMiddleware.js";
 
@@ -277,6 +280,7 @@ router.patch("/notifications/mark-all-read", markAllNotificationsRead);
 // router.get("/get-evaluation-params", protectAdmin, getEvaluationParameters);
 router.post(
   "/save-all-project-evaluations/:groupId",
+  protectAdmin,
   saveAllProjectEvaluations
 );
 

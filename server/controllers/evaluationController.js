@@ -1,8 +1,9 @@
-// controllers/evaluationController.js
 import Evaluation from "../models/Evaluation.js";
 import EvaluationParameter from "../models/evaluationParameter.js";
 import Group from "../models/group.js";
+import ProjectEvaluation from "../models/projectEvaluation.js";
 
+// Get all evaluation parameters, sorted by order
 export const getEvaluationParameters = async (req, res) => {
   try {
     const params = await EvaluationParameter.find().sort({ order: 1 });
@@ -12,6 +13,7 @@ export const getEvaluationParameters = async (req, res) => {
   }
 };
 
+// Get group and its students info by groupId, assembling students array
 export const getProjectEvaluationById = async (req, res) => {
   try {
     const { groupId } = req.params;
@@ -31,7 +33,6 @@ export const getProjectEvaluationById = async (req, res) => {
       return res.status(404).json({ message: "Group not found" });
     }
 
-    // Construct students array from either membersSnapshot or students
     const students =
       group.membersSnapshot && group.membersSnapshot.length > 0
         ? group.membersSnapshot.map((m) => ({
@@ -49,7 +50,7 @@ export const getProjectEvaluationById = async (req, res) => {
       success: true,
       data: {
         ...group.toObject(),
-        students, // Override with constructed students array
+        students, // override with constructed students array
       },
     });
   } catch (error) {
@@ -58,29 +59,73 @@ export const getProjectEvaluationById = async (req, res) => {
   }
 };
 
-export const saveEvaluation = async (req, res) => {
+// Get existing project evaluations (ProjectEvaluation collection) for a group
+export const getProjectEvaluationsByGroup = async (req, res) => {
+  try {
+    const { groupId } = req.params;
+
+    const evaluations = await ProjectEvaluation.find({ projectId: groupId })
+      .populate("studentId", "name enrollmentNumber")
+      .populate("parameterId", "name");
+
+    res.status(200).json({
+      success: true,
+      data: evaluations,
+    });
+  } catch (err) {
+    console.error("Error fetching project evaluations:", err.message);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching evaluations",
+    });
+  }
+};
+
+// Save all project evaluations for a group (individual student marks)
+export const saveAllProjectEvaluations = async (req, res) => {
   try {
     const { groupId } = req.params;
     const { evaluations } = req.body;
 
-    await Evaluation.deleteMany({ group: groupId });
-
-    if (evaluations && evaluations.length > 0) {
-      const docs = evaluations.map((e) => ({
-        group: groupId,
-        student: e.student,
-        parameter: e.parameter,
-        marks: Number(e.marks),
-        evaluatedBy: req.user._id,
-      }));
-      await Evaluation.insertMany(docs);
+    if (!Array.isArray(evaluations) || evaluations.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No evaluations provided",
+      });
     }
 
+    // Process each evaluation update/insert separately (atomic upsert)
+    const upsertPromises = evaluations.map((e) =>
+      ProjectEvaluation.findOneAndUpdate(
+        {
+          projectId: groupId,
+          studentId: e.student,
+          parameterId: e.parameter,
+        },
+        {
+          $set: {
+            givenMarks: Number(e.marks),
+            evaluatedBy: req.admin._id,
+          },
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      )
+    );
+
+    await Promise.all(upsertPromises);
+
+    // Update group status
     await Group.findByIdAndUpdate(groupId, { status: "Completed" });
 
-    res.json({ success: true, message: "Evaluation saved successfully!" });
-  } catch (error) {
-    console.error("saveEvaluation ERROR:", error);
-    res.status(500).json({ message: error.message });
+    res.json({
+      success: true,
+      message: "All evaluations saved successfully!",
+    });
+  } catch (err) {
+    console.error("Error saving project evaluations:", err.message);
+    res.status(500).json({
+      success: false,
+      message: err.message || "Server error",
+    });
   }
 };

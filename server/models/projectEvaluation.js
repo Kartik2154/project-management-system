@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 
 const projectEvaluationSchema = new mongoose.Schema(
   {
-    projectId: {
+    groupId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Group",
       required: true,
@@ -32,9 +32,9 @@ const projectEvaluationSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// ✅ Ensure no duplicate evaluations per student per parameter per project
+// ✅ Ensure no duplicate evaluations per student per parameter per group
 projectEvaluationSchema.index(
-  { projectId: 1, studentId: 1, parameterId: 1 },
+  { groupId: 1, studentId: 1, parameterId: 1 },
   { unique: true }
 );
 
