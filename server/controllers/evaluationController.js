@@ -1,9 +1,8 @@
-import Evaluation from "../models/Evaluation.js";
 import EvaluationParameter from "../models/evaluationParameter.js";
 import Group from "../models/group.js";
 import ProjectEvaluation from "../models/projectEvaluation.js";
 
-// Get all evaluation parameters, sorted by order
+// Get all evaluation parameters sorted by order
 export const getEvaluationParameters = async (req, res) => {
   try {
     const params = await EvaluationParameter.find().sort({ order: 1 });
@@ -13,7 +12,7 @@ export const getEvaluationParameters = async (req, res) => {
   }
 };
 
-// Get group and its students info by groupId, assembling students array
+// Get group info and students with nested evaluations populated
 export const getProjectEvaluationById = async (req, res) => {
   try {
     const { groupId } = req.params;
@@ -22,19 +21,14 @@ export const getProjectEvaluationById = async (req, res) => {
       .populate("students", "name enrollmentNumber _id")
       .populate({
         path: "membersSnapshot",
-        populate: {
-          path: "studentRef",
-          select: "name enrollmentNumber _id",
-        },
+        populate: { path: "studentRef", select: "name enrollmentNumber _id" },
       })
       .select("projectTitle projectTechnology status students membersSnapshot");
 
-    if (!group) {
-      return res.status(404).json({ message: "Group not found" });
-    }
+    if (!group) return res.status(404).json({ message: "Group not found" });
 
     const students =
-      group.membersSnapshot && group.membersSnapshot.length > 0
+      group.membersSnapshot?.length > 0
         ? group.membersSnapshot.map((m) => ({
             _id: m.studentRef?._id,
             name: m.studentRef?.name || "Unknown",
@@ -46,16 +40,18 @@ export const getProjectEvaluationById = async (req, res) => {
             enrollmentNumber: s.enrollmentNumber,
           }));
 
+    // Fetch nested evaluations with parameter info populated
     const evaluations = await ProjectEvaluation.find({ projectId: groupId })
       .populate("studentId", "name enrollmentNumber")
-      .populate("parameterId", "name");
+      .populate("evaluations.parameterId", "name")
+      .lean();
 
     res.json({
       success: true,
       data: {
         ...group.toObject(),
-        students, // override with constructed students array
-        evaluations, // includes each evaluation with student and parameter info
+        students,
+        evaluations,
       },
     });
   } catch (error) {
@@ -64,74 +60,35 @@ export const getProjectEvaluationById = async (req, res) => {
   }
 };
 
-// Get existing project evaluations (ProjectEvaluation collection) for a group
-export const getProjectEvaluationsByGroup = async (req, res) => {
-  try {
-    const { groupId } = req.params;
-
-    const evaluations = await ProjectEvaluation.find({ projectId: groupId })
-      .populate("studentId", "name enrollmentNumber")
-      .populate("parameterId", "name");
-
-    res.status(200).json({
-      success: true,
-      data: evaluations,
-    });
-  } catch (err) {
-    console.error("Error fetching project evaluations:", err.message);
-    res.status(500).json({
-      success: false,
-      message: "Server error while fetching evaluations",
-    });
-  }
-};
-
-// Save all project evaluations for a group (individual student marks)
-
+// Save nested evaluations grouped by student (upsert)
 export const saveAllProjectEvaluations = async (req, res) => {
   try {
     const { groupId } = req.params;
     const { evaluations } = req.body;
 
-    if (!Array.isArray(evaluations) || evaluations.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "No evaluations provided",
-      });
-    }
+    if (!Array.isArray(evaluations) || evaluations.length === 0)
+      return res.status(400).json({ message: "No evaluations provided" });
 
-    // Group evaluations by studentId
     const grouped = evaluations.reduce((acc, e) => {
       if (!acc[e.student]) acc[e.student] = [];
       acc[e.student].push({ parameterId: e.parameter, marks: Number(e.marks) });
       return acc;
     }, {});
 
-    const upsertPromises = Object.entries(grouped).map(([studentId, evals]) =>
+    const upsertOps = Object.entries(grouped).map(([studentId, evals]) =>
       ProjectEvaluation.findOneAndUpdate(
         { projectId: groupId, studentId },
-        {
-          $set: {
-            evaluations: evals,
-            evaluatedBy: req.admin._id,
-          },
-        },
+        { $set: { evaluations: evals, evaluatedBy: req.admin._id } },
         { upsert: true, new: true, setDefaultsOnInsert: true }
       )
     );
 
-    await Promise.all(upsertPromises);
-
+    await Promise.all(upsertOps);
     await Group.findByIdAndUpdate(groupId, { status: "Completed" });
 
-    res.json({
-      success: true,
-      message: "All evaluations saved successfully!",
-    });
-  } catch (err) {
-    console.error("Error saving project evaluations:", err);
-    res
-      .status(500)
-      .json({ success: false, message: err.message || "Server error" });
+    res.json({ success: true, message: "All evaluations saved successfully!" });
+  } catch (error) {
+    console.error("Error saving project evaluations:", error);
+    res.status(500).json({ message: error.message || "Server error" });
   }
 };

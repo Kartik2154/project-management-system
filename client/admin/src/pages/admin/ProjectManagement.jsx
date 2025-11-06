@@ -120,19 +120,35 @@ function ProjectManagement() {
 
         setSelectedGroup({
           ...groupData,
-          students: groupData.students || [],
+          students: groupData.students?.length
+            ? groupData.students
+            : groupData.membersSnapshot?.map((m) => ({
+                _id: m.studentRef?._id,
+                name: m.studentRef?.name || "Unknown",
+                enrollmentNumber: m.studentRef?.enrollmentNumber || "N/A",
+              })) || [],
         });
 
-        const evals = groupData.evaluations || [];
-        const marks = {};
-        evals.forEach((e) => {
-          const studentId = String(e.studentId?._id || e.studentId);
-          const paramId = String(e.parameterId?._id || e.parameterId);
-          if (studentId && paramId) {
-            marks[`${studentId}_${paramId}`] = e.givenMarks;
-          }
+        const evaluations = groupData.evaluations || [];
+        const marksData = {};
+
+        evaluations.forEach((evDoc) => {
+          // Handle populated or raw ObjectId studentId
+          const studentId =
+            typeof evDoc.studentId === "object"
+              ? evDoc.studentId._id
+              : evDoc.studentId;
+
+          evDoc.evaluations.forEach(({ parameterId, marks }) => {
+            // Handle populated or raw ObjectId parameterId
+            const paramId =
+              typeof parameterId === "object" ? parameterId._id : parameterId;
+
+            marksData[`${studentId}_${paramId}`] = marks;
+          });
         });
-        setMarksData(marks);
+
+        setMarksData(marksData);
       } catch (err) {
         console.error("Failed to fetch group details:", err);
         toast.error("Failed to load group details");
@@ -209,7 +225,7 @@ function ProjectManagement() {
     );
   });
 
-  const handleBack = () => navigate("/dashboard");
+  const handleBack = () => navigate("/admin/dashboard");
   const handleViewDetails = (group) => {
     setSelectedGroup(group);
   };
@@ -324,20 +340,14 @@ function ProjectManagement() {
                   const studentName = student.name || "Unknown Student";
                   const enrollment = student.enrollmentNumber || "N/A";
 
-                  // Calculate total given marks for this student
                   const studentTotal = evaluationParameters.reduce(
-                    (sum, param) => {
-                      return (
-                        sum +
-                        (Number(marksData[`${studentId}_${param._id}`]) || 0)
-                      );
-                    },
+                    (sum, param) =>
+                      sum +
+                      (Number(marksData[`${studentId}_${param._id}`]) || 0),
                     0
                   );
-
-                  // Max total marks possible for this student
                   const maxTotal = evaluationParameters.reduce(
-                    (s, p) => s + p.marks,
+                    (acc, p) => acc + p.marks,
                     0
                   );
 
@@ -378,7 +388,6 @@ function ProjectManagement() {
                         );
                       })}
 
-                      {/* Total column */}
                       <td className="px-10 py-8 text-center">
                         <span className="inline-block bg-gradient-to-r from-accent-teal to-cyan-500 text-white font-extrabold text-2xl px-8 py-4 rounded-2xl shadow-2xl">
                           {studentTotal} / {maxTotal}
