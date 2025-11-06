@@ -50,8 +50,6 @@ import {
   addGuideAnnouncement,
   updateGuideAnnouncement,
   deleteGuideAnnouncement,
-  getProjectEvaluations,
-  getProjectEvaluationById,
   updateProjectEvaluation,
   getAllStudents,
   getStudentById,
@@ -63,6 +61,8 @@ import {
   markAllNotificationsRead,
   // updateGroupDetails,
 } from "../../controllers/admin/adminController.js";
+
+import { getProjectEvaluationById } from "../../controllers/evaluationController.js";
 
 import { protectAdmin } from "../../middlewares/authMiddleware.js";
 
@@ -230,13 +230,15 @@ router.put("/guide-announcements/:id", updateGuideAnnouncement);
 // DELETE a guide announcement by ID
 router.delete("/guide-announcements/:id", deleteGuideAnnouncement);
 
-router.get("/get-project-evaluations", getProjectEvaluations);
-
-// GET evaluations for a specific project
-router.get("/get-project-evaluation/:projectId", getProjectEvaluationById);
-
+// GET evaluation data
+router.get(
+  "/get-group-evaluation/:groupId",
+  protectAdmin,
+  getProjectEvaluationById
+);
+// Correct order: groupId → parameterId → studentId
 router.put(
-  "/project-evaluations/:projectId/:parameterId",
+  "/project-evaluations/:groupId/:parameterId/:studentId",
   updateProjectEvaluation
 );
 
@@ -268,4 +270,13 @@ router.post("/notifications", createNotification);
 router.patch("/notifications/:id/read", markNotificationAsRead);
 router.patch("/notifications/mark-all-read", markAllNotificationsRead);
 
+// GET all parameters
+// // Parameters
+// router.get("/get-evaluation-params", protectAdmin, getEvaluationParameters);
+// POST save all marks
+// router.post(
+//   "/get-group-evaluation/:groupId/evaluate",
+//   protectAdmin,
+//   saveEvaluation
+// );
 export default router;

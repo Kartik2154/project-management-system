@@ -1,3 +1,4 @@
+// models/Evaluation.js
 import mongoose from "mongoose";
 
 const evaluationSchema = new mongoose.Schema(
@@ -5,6 +6,11 @@ const evaluationSchema = new mongoose.Schema(
     group: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Group",
+      required: true,
+    },
+    guide: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Guide",
       required: true,
     },
     student: {
@@ -22,13 +28,14 @@ const evaluationSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
-    evaluatedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Guide",
-      default: null,
-    },
   },
   { timestamps: true }
+);
+
+// Compound index to prevent duplicate entries
+evaluationSchema.index(
+  { group: 1, student: 1, parameter: 1 },
+  { unique: true }
 );
 
 const Evaluation = mongoose.model("Evaluation", evaluationSchema);

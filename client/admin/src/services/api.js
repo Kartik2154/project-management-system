@@ -80,6 +80,7 @@ export const enrollmentAPI = {
 // ✅ Evaluation Parameters API
 export const evaluationParameterAPI = {
   getAll: () => api.get("/get-evaluation-params"),
+
   create: (payload) => api.post("/add-evaluation-param", payload),
   update: (id, payload) => api.put(`/update-evaluation-param/${id}`, payload),
   delete: (id) => api.delete(`/delete-evaluation-param/${id}`),
@@ -109,13 +110,12 @@ export const courseAnnouncementAPI = {
 };
 
 // ✅ Project Evaluations API
-export const projectEvaluationAPI = {
-  getAll: () => api.get("/get-project-evaluations"),
-  getByProject: (projectId) => api.get(`/get-project-evaluation/${projectId}`),
-  update: (projectId, parameterId, payload) =>
-    api.put(`/project-evaluations/${projectId}/${parameterId}`, payload),
-};
+// services/api.js (या जहाँ भी है)
 
+// ✅ Project Evaluations API – FINAL & FULLY WORKING
+export const projectEvaluationAPI = {
+  getByProject: (groupId) => api.get(`/get-project-evaluation/${groupId}`), // ← पुराना वाला
+};
 // ✅ Guide Announcements API
 export const guideAnnouncementAPI = {
   getAll: () => api.get("/guide-announcements"),

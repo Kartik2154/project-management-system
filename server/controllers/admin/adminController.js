@@ -523,49 +523,55 @@ export const getDivisions = async (req, res) => {
  * GET /api/admin/get-group/:id
  * Fetch detailed group info by ID
  */
+// controllers/admin/adminController.js → getGroupById
+
 export const getGroupById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // 💡 MODIFICATION HERE: Add 'phone' to the selected fields for the 'guide' population.
     const group = await Group.findById(id)
-      .populate("guide", "name email expertise phone") // fetch guide details including phone
-      .populate("division", "course semester year status") // fetch division details
-      .populate("students", "name enrollmentNumber") // fetch student list
+      .populate("guide", "name email expertise phone")
+      .populate("division", "course semester year status")
+      // YE LINE ADD KAR DE — YE HI TERA FIX HAI
+      .populate({
+        path: "membersSnapshot",
+        populate: {
+          path: "studentRef",
+          select: "name enrollmentNumber _id",
+        },
+      })
+      .populate("students", "name enrollmentNumber") // fallback
       .exec();
 
     if (!group) {
-      return res.status(404).json({
-        success: false,
-        message: "Group not found",
-      });
+      return res
+        .status(404)
+        .json({ success: false, message: "Group not found" });
     }
 
-    // Format members for frontend consistency, using group's division
-    const members = group.students.map((s) => ({
-      _id: s._id,
-      name: s.name,
-      enrollment: s.enrollmentNumber,
-      className: `${group.division?.course || ""} ${
-        group.division?.semester || ""
-      }`.trim(),
-    }));
+    // membersSnapshot se members bana
+    const members =
+      group.membersSnapshot.length > 0
+        ? group.membersSnapshot.map((m) => ({
+            _id: m.studentRef?._id,
+            name: m.studentRef?.name || "Unknown",
+            enrollmentNumber: m.studentRef?.enrollmentNumber || "N/A",
+          }))
+        : group.students.map((s) => ({
+            _id: s._id,
+            name: s.name,
+            enrollmentNumber: s.enrollmentNumber,
+          }));
 
     const responseData = {
       ...group.toObject(),
-      members,
+      members, // ye hi frontend me jaayega
     };
 
-    res.status(200).json({
-      success: true,
-      data: responseData,
-    });
+    res.status(200).json({ success: true, data: responseData });
   } catch (err) {
-    console.error("❌ Error fetching group details:", err.message);
-    res.status(500).json({
-      success: false,
-      message: "Server error while fetching group details",
-    });
+    console.error("Error fetching group details:", err.message);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
@@ -2084,6 +2090,8 @@ export const getProjectEvaluations = async (req, res) => {
       .populate("projectId", "name projectTitle") // group info
       .populate("parameterId", "name description marks") // parameter info
       .populate("evaluatedBy", "name email") // admin info
+      .populate("studentId", "name enrollmentNumber email")
+
       .exec();
 
     res.status(200).json({
@@ -2100,98 +2108,40 @@ export const getProjectEvaluations = async (req, res) => {
   }
 };
 
-/**
- * @desc   Get evaluations for a specific project
- * @route  GET /api/admin/get-project-evaluation/:projectId
- * @access Private (Admin)
- */
-export const getProjectEvaluationById = async (req, res) => {
-  try {
-    const { projectId } = req.params;
+// controllers/admin/adminController.js
 
-    // Validate project existence
-    const project = await Group.findById(projectId).select("name projectTitle");
-    if (!project) {
-      return res.status(404).json({
-        success: false,
-        message: "Project not found",
-      });
-    }
+// controllers/admin/adminController.js
 
-    // Fetch all evaluations for this project
-    const evaluations = await ProjectEvaluation.find({ projectId })
-      .populate("parameterId", "name description marks")
-      .populate("evaluatedBy", "name email");
+// controllers/admin/adminController.js
 
-    res.status(200).json({
-      success: true,
-      project: {
-        id: project._id,
-        name: project.name,
-        title: project.projectTitle,
-      },
-      count: evaluations.length,
-      data: evaluations,
-    });
-  } catch (err) {
-    console.error("❌ Error fetching project evaluation:", err.message);
-    res.status(500).json({
-      success: false,
-      message: "Server error while fetching project evaluation",
-    });
-  }
-};
-
-/**
- * @desc   Update givenMarks for a specific project and parameter
- * @route  PUT /api/admin/project-evaluations/:projectId/:parameterId
- * @access Private (Admin)
- */
 export const updateProjectEvaluation = async (req, res) => {
   try {
-    const { projectId, parameterId } = req.params;
-    const { givenMarks } = req.body;
+    const { groupId, parameterId, studentId } = req.params;
+    const { marks } = req.body;
 
-    // 1️⃣ Validate marks
-    if (givenMarks === undefined || isNaN(givenMarks)) {
-      return res.status(400).json({
-        success: false,
-        message: "Please provide a valid numeric value for givenMarks.",
-      });
-    }
+    console.log("SAVE REQUEST:", { groupId, parameterId, studentId, marks });
 
-    // 2️⃣ Find and update or create evaluation
     const evaluation = await ProjectEvaluation.findOneAndUpdate(
-      { projectId, parameterId },
       {
-        givenMarks,
-        evaluatedBy: req.admin?.id, // from protectAdmin middleware
+        projectId: groupId,
+        studentId: studentId,
+        parameterId: parameterId,
       },
-      { new: true, upsert: true, runValidators: true }
+      { marks: Number(marks) },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
     )
-      .populate("parameterId", "name description marks")
-      .populate("evaluatedBy", "name email");
+      .populate("studentId", "name enrollmentNumber")
+      .populate("parameterId", "name marks");
 
-    // 3️⃣ Handle missing evaluation (should not happen due to upsert)
     if (!evaluation) {
-      return res.status(404).json({
-        success: false,
-        message: "Evaluation record not found for this project and parameter.",
-      });
+      return res.status(404).json({ success: false, message: "Not found" });
     }
 
-    // 4️⃣ Success response
-    res.status(200).json({
-      success: true,
-      message: "Project evaluation updated successfully.",
-      data: evaluation,
-    });
-  } catch (error) {
-    console.error("❌ Error updating project evaluation:", error.message);
-    res.status(500).json({
-      success: false,
-      message: "Server error while updating project evaluation.",
-    });
+    console.log("SAVED IN DB:", evaluation);
+    res.json({ success: true, data: evaluation });
+  } catch (err) {
+    console.error("SAVE ERROR:", err);
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
