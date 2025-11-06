@@ -25,6 +25,11 @@ import {
   rejectProjectProposal,
 } from "../controllers/guideController.js";
 
+import {
+  saveEvaluation,
+  getEvaluationParameters,
+} from "../controllers/evaluationController.js";
+
 const router = express.Router();
 
 // ----------------------------------------------------------------------
@@ -114,5 +119,9 @@ guidePanelRouter.put(
 
 // Mount the guidePanelRouter
 router.use("/guide-panel", guidePanelRouter);
+
+guidePanelRouter.get("/evaluation-parameters", getEvaluationParameters);
+
+router.post("/projects/:groupId/evaluate", protectGuide, saveEvaluation);
 
 export default router;
