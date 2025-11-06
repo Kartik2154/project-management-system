@@ -1,6 +1,5 @@
 // models/ProjectEvaluation.js
 import mongoose from "mongoose";
-
 const projectEvaluationSchema = new mongoose.Schema(
   {
     projectId: {
@@ -13,29 +12,28 @@ const projectEvaluationSchema = new mongoose.Schema(
       ref: "Student",
       required: true,
     },
-    parameterId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "EvaluationParameter",
-      required: true,
-    },
-    givenMarks: {
-      type: Number,
-      min: 0,
-      default: null,
-    },
+    evaluations: [
+      {
+        parameterId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "EvaluationParameter",
+          required: true,
+        },
+        marks: {
+          type: Number,
+          min: 0,
+          required: true,
+        },
+      },
+    ],
     evaluatedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Admin",
-      default: null,
     },
   },
   { timestamps: true }
 );
 
-// ✅ Ensure no duplicate evaluations per student per parameter per group
-projectEvaluationSchema.index(
-  { projectId: 1, studentId: 1, parameterId: 1 },
-  { unique: true }
-);
+projectEvaluationSchema.index({ projectId: 1, studentId: 1 }, { unique: true });
 
 export default mongoose.model("ProjectEvaluation", projectEvaluationSchema);

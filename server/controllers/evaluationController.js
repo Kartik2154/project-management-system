@@ -46,11 +46,16 @@ export const getProjectEvaluationById = async (req, res) => {
             enrollmentNumber: s.enrollmentNumber,
           }));
 
+    const evaluations = await ProjectEvaluation.find({ projectId: groupId })
+      .populate("studentId", "name enrollmentNumber")
+      .populate("parameterId", "name");
+
     res.json({
       success: true,
       data: {
         ...group.toObject(),
         students, // override with constructed students array
+        evaluations, // includes each evaluation with student and parameter info
       },
     });
   } catch (error) {
@@ -82,6 +87,7 @@ export const getProjectEvaluationsByGroup = async (req, res) => {
 };
 
 // Save all project evaluations for a group (individual student marks)
+
 export const saveAllProjectEvaluations = async (req, res) => {
   try {
     const { groupId } = req.params;
@@ -94,17 +100,19 @@ export const saveAllProjectEvaluations = async (req, res) => {
       });
     }
 
-    // Process each evaluation update/insert separately (atomic upsert)
-    const upsertPromises = evaluations.map((e) =>
+    // Group evaluations by studentId
+    const grouped = evaluations.reduce((acc, e) => {
+      if (!acc[e.student]) acc[e.student] = [];
+      acc[e.student].push({ parameterId: e.parameter, marks: Number(e.marks) });
+      return acc;
+    }, {});
+
+    const upsertPromises = Object.entries(grouped).map(([studentId, evals]) =>
       ProjectEvaluation.findOneAndUpdate(
-        {
-          projectId: groupId,
-          studentId: e.student,
-          parameterId: e.parameter,
-        },
+        { projectId: groupId, studentId },
         {
           $set: {
-            givenMarks: Number(e.marks),
+            evaluations: evals,
             evaluatedBy: req.admin._id,
           },
         },
@@ -114,7 +122,6 @@ export const saveAllProjectEvaluations = async (req, res) => {
 
     await Promise.all(upsertPromises);
 
-    // Update group status
     await Group.findByIdAndUpdate(groupId, { status: "Completed" });
 
     res.json({
@@ -122,10 +129,9 @@ export const saveAllProjectEvaluations = async (req, res) => {
       message: "All evaluations saved successfully!",
     });
   } catch (err) {
-    console.error("Error saving project evaluations:", err.message);
-    res.status(500).json({
-      success: false,
-      message: err.message || "Server error",
-    });
+    console.error("Error saving project evaluations:", err);
+    res
+      .status(500)
+      .json({ success: false, message: err.message || "Server error" });
   }
 };

@@ -118,20 +118,18 @@ function ProjectManagement() {
         const res = await projectEvaluationAPI.getByProject(selectedGroup._id);
         const groupData = res.data.data;
 
-        // Ensure students are populated
         setSelectedGroup({
           ...groupData,
           students: groupData.students || [],
         });
 
-        // Load existing marks
         const evals = groupData.evaluations || [];
         const marks = {};
         evals.forEach((e) => {
-          const studentId = String(e.student?._id || e.student);
-          const paramId = String(e.parameter?._id || e.parameter);
+          const studentId = String(e.studentId?._id || e.studentId);
+          const paramId = String(e.parameterId?._id || e.parameterId);
           if (studentId && paramId) {
-            marks[`${studentId}_${paramId}`] = e.marks;
+            marks[`${studentId}_${paramId}`] = e.givenMarks;
           }
         });
         setMarksData(marks);
@@ -326,6 +324,7 @@ function ProjectManagement() {
                   const studentName = student.name || "Unknown Student";
                   const enrollment = student.enrollmentNumber || "N/A";
 
+                  // Calculate total given marks for this student
                   const studentTotal = evaluationParameters.reduce(
                     (sum, param) => {
                       return (
@@ -335,6 +334,8 @@ function ProjectManagement() {
                     },
                     0
                   );
+
+                  // Max total marks possible for this student
                   const maxTotal = evaluationParameters.reduce(
                     (s, p) => s + p.marks,
                     0
@@ -351,6 +352,7 @@ function ProjectManagement() {
                         <p className="text-white">{studentName}</p>
                         <p className="text-sm text-white/60">{enrollment}</p>
                       </td>
+
                       {evaluationParameters.map((param) => {
                         const cellKey = `${studentId}_${param._id}`;
                         const value = marksData[cellKey] ?? "";
@@ -375,6 +377,8 @@ function ProjectManagement() {
                           </td>
                         );
                       })}
+
+                      {/* Total column */}
                       <td className="px-10 py-8 text-center">
                         <span className="inline-block bg-gradient-to-r from-accent-teal to-cyan-500 text-white font-extrabold text-2xl px-8 py-4 rounded-2xl shadow-2xl">
                           {studentTotal} / {maxTotal}
