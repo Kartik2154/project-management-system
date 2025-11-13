@@ -14,20 +14,18 @@ import {
 } from "lucide-react";
 import { guidePanelAPI } from "../../services/api";
 
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+const defaultToastOptions = { position: "top-right", theme: "dark" };
+
 export default function ProjectEvaluation() {
   const navigate = useNavigate();
   const [selectedProject, setSelectedProject] = useState(null);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [evaluationForm, setEvaluationForm] = useState({
-    technicalScore: 0,
-    presentationScore: 0,
-    documentationScore: 0,
-    innovationScore: 0,
-    overallScore: 0,
-    status: "pending",
-  });
+  const [evaluationForm, setEvaluationForm] = useState({});
 
   // Load projects on component mount
   useEffect(() => {
@@ -64,49 +62,44 @@ export default function ProjectEvaluation() {
   }, []);
 
   const submitEvaluation = async () => {
-    if (!selectedProject) return alert("Select a project first!");
+    if (!selectedProject) {
+      toast.warning("Select a project first!", defaultToastOptions);
+      return;
+    }
 
     const groupId = selectedProject._id || selectedProject.id;
-    if (!groupId) return alert("Invalid project ID");
+    if (!groupId) {
+      toast.error("Invalid project ID", defaultToastOptions);
+      return;
+    }
 
     const evaluations = [];
 
     selectedProject.members.forEach((member) => {
       const studentId = member?._id;
-      if (!studentId) {
-        console.warn("⚠️ Skipping member without valid ID:", member);
-        return;
-      }
+      if (!studentId) return;
 
       evaluationCriteria.forEach((param) => {
         const paramId = param?._id;
         const key = `${studentId}_${paramId}`;
         const marks = Number(evaluationForm[key] || 0);
-
-        evaluations.push({
-          student: studentId,
-          parameter: paramId,
-          marks,
-        });
+        evaluations.push({ student: studentId, parameter: paramId, marks });
       });
     });
 
-    if (evaluations.length === 0) {
-      alert("No valid evaluation data found!");
+    if (!evaluations.length) {
+      toast.warning("No evaluation data to save", defaultToastOptions);
       return;
     }
 
-    console.log("✅ Sending evaluations:", evaluations);
-
     try {
       await guidePanelAPI.saveEvaluation(groupId, evaluations);
-      alert("✅ Evaluation saved successfully!");
+      toast.success("Evaluation saved successfully!", defaultToastOptions);
     } catch (err) {
       console.error("❌ Error submitting evaluation:", err);
-      alert(err.response?.data?.message || "Failed to save evaluation");
+      toast.error("Failed to save evaluation", defaultToastOptions);
     }
   };
-
   const downloadDocument = (documentName) => {
     alert(`Downloading ${documentName}`);
   };
@@ -136,6 +129,7 @@ export default function ProjectEvaluation() {
 
   return (
     <div className="min-h-screen bg-gray-900 font-sans">
+      <ToastContainer {...defaultToastOptions} />
       {/* Header */}
       <div className="sticky top-0 w-full bg-white/20 backdrop-blur-md border-b border-white/30 shadow-glow z-10 py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">
@@ -167,22 +161,81 @@ export default function ProjectEvaluation() {
                 {projects.map((project) => (
                   <div
                     key={project._id || project.id}
-                    onClick={() => {
-                      // Normalize members into objects with both _id and name
-                      const normalizedMembers = project.members.map(
-                        (m) =>
-                          typeof m === "object"
-                            ? { _id: m._id || m.id, name: m.name }
-                            : { _id: m, name: m } // fallback if backend sends only strings
+                    onClick={async () => {
+                      // 🧩 Normalize members (ensures _id + name always exist)
+                      const normalizedMembers = project.members.map((m) =>
+                        typeof m === "object"
+                          ? { _id: m._id || m.id, name: m.name }
+                          : { _id: m, name: m }
                       );
 
                       setSelectedProject({
                         ...project,
                         members: normalizedMembers,
                       });
+
+                      try {
+                        // 🔍 Fetch evaluation data for this group/project
+                        const res = await guidePanelAPI.getEvaluationByGroup(
+                          project._id || project.id
+                        );
+
+                        // ✅ Safely handle both API response shapes
+                        const evaluationsData =
+                          res?.data?.data?.evaluations ||
+                          res?.evaluations ||
+                          [];
+
+                        console.log("📦 Evaluations fetched:", evaluationsData);
+
+                        if (
+                          !Array.isArray(evaluationsData) ||
+                          evaluationsData.length === 0
+                        ) {
+                          toast.info(
+                            "No previous evaluations found",
+                            defaultToastOptions
+                          );
+                          setEvaluationForm({});
+                          return;
+                        }
+
+                        // 🧠 Map API response into your formState
+                        const formState = {};
+                        evaluationsData.forEach((studentEval) => {
+                          const studentId =
+                            studentEval.studentId?._id ||
+                            studentEval.studentId ||
+                            null;
+                          if (!studentId) return;
+
+                          studentEval.evaluations.forEach((ev) => {
+                            const paramId =
+                              ev.parameterId?._id || ev.parameterId || null;
+                            if (!paramId) return;
+
+                            const key = `${studentId}_${paramId}`;
+                            formState[key] = ev.marks ?? "";
+                          });
+                        });
+
+                        console.log("✅ Final formState:", formState);
+                        setEvaluationForm(formState);
+
+                        toast.success(
+                          "Previous evaluations loaded",
+                          defaultToastOptions
+                        );
+                      } catch (err) {
+                        console.error("❌ Error fetching evaluations:", err);
+                        toast.error(
+                          "Failed to load evaluations",
+                          defaultToastOptions
+                        );
+                      }
                     }}
                     className={`p-4 rounded-2xl cursor-pointer transition-all duration-200 border-2 ${
-                      selectedProject?.id === project.id
+                      selectedProject?._id === (project._id || project.id)
                         ? "border-teal-400 bg-teal-500/20"
                         : "border-white/20 hover:border-white/40"
                     }`}
@@ -320,14 +373,17 @@ export default function ProjectEvaluation() {
                               max={criteria.marks}
                               value={
                                 evaluationForm[
-                                  `${member._id}_${criteria._id}`
+                                  `${member._id || member.id}_${
+                                    criteria._id || criteria.id
+                                  }`
                                 ] || ""
                               }
                               onChange={(e) =>
                                 setEvaluationForm((prev) => ({
                                   ...prev,
-                                  [`${member._id}_${criteria._id}`]:
-                                    e.target.value,
+                                  [`${member._id || member.id}_${
+                                    criteria._id || criteria.id
+                                  }`]: e.target.value,
                                 }))
                               }
                               className="w-20 text-center rounded-md bg-white/20 text-white border border-white/30"
@@ -336,34 +392,6 @@ export default function ProjectEvaluation() {
                         ))}
                       </div>
                     ))}
-                  </div>
-                </div>
-
-                {/* Overall Score */}
-                <div className="mb-6">
-                  <div className="bg-gradient-to-r from-teal-500/20 to-cyan-500/20 p-4 rounded-2xl border border-teal-400/30">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-semibold text-white">
-                          Overall Score
-                        </h3>
-                        <p className="text-white/70 text-sm">
-                          Total points out of 80
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-3xl font-bold text-white">
-                          {evaluationForm.overallScore}
-                        </div>
-                        <div
-                          className={`text-lg font-semibold ${
-                            getGrade(evaluationForm.overallScore).color
-                          }`}
-                        >
-                          {getGrade(evaluationForm.overallScore).grade}
-                        </div>
-                      </div>
-                    </div>
                   </div>
                 </div>
 

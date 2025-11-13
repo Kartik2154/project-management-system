@@ -25,8 +25,6 @@ import {
   rejectProjectProposal,
 } from "../controllers/guideController.js";
 
-import { getEvaluationParameters } from "../controllers/evaluationController.js";
-
 const router = express.Router();
 
 // ----------------------------------------------------------------------
@@ -117,6 +115,39 @@ guidePanelRouter.put(
 // Mount the guidePanelRouter
 router.use("/guide-panel", guidePanelRouter);
 
-guidePanelRouter.get("/evaluation-parameters", getEvaluationParameters);
+// -------------------------
+// 🔹 GUIDE PROJECT EVALUATION ROUTES
+// -------------------------
+
+import {
+  getEvaluationParameters,
+  getProjectEvaluationById,
+  saveAllProjectEvaluations,
+} from "../controllers/evaluationController.js";
+
+// -------------------------
+// 🔹 GUIDE EVALUATION ROUTES
+// -------------------------
+
+// GET evaluation parameters
+guidePanelRouter.get(
+  "/evaluation-parameters",
+  protectGuide,
+  getEvaluationParameters
+);
+
+// GET group evaluation details (students + marks)
+guidePanelRouter.get(
+  "/projects/:groupId/evaluation",
+  protectGuide,
+  getProjectEvaluationById
+);
+
+// POST save/update evaluation
+guidePanelRouter.post(
+  "/projects/:groupId/evaluate",
+  protectGuide,
+  saveAllProjectEvaluations
+);
 
 export default router;

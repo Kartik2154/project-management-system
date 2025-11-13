@@ -359,16 +359,26 @@ export const guidePanelAPI = {
     return response.data;
   },
 
-  /**
-   * Save per-student evaluation marks
-   * @param {string} groupId
-   * @param {object[]} studentMarks - Array of { studentId, parameterId, marks }
-   * @returns {Promise<object>}
-   */
-  saveEvaluation: async (groupId, evaluations) =>
-    apiRequest(`/guide-panel/projects/${groupId}/evaluate`, "POST", {
-      evaluations,
-    }),
+  getEvaluationByGroup: async (groupId) => {
+    const response = await apiRequest(
+      `/guide-panel/projects/${groupId}/evaluation`,
+      {
+        method: "GET",
+      }
+    );
+    return response.data;
+  },
+
+  saveEvaluation: async (groupId, evaluations) => {
+    const response = await apiRequest(
+      `/guide-panel/projects/${groupId}/evaluate`,
+      {
+        method: "POST",
+        body: JSON.stringify({ evaluations }),
+      }
+    );
+    return response.data;
+  },
 
   // ------------------------------
 
