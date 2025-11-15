@@ -339,7 +339,6 @@ function ProjectManagement() {
 
   // --- Handlers ---
   const handleViewDetails = (group) => setSelectedGroup(group);
-  const handleBackToList = () => setSelectedGroup(null);
 
   // --- PDF Generation ---
   const [showPdfModal, setShowPdfModal] = useState(false);
@@ -422,23 +421,6 @@ function ProjectManagement() {
   const renderDetailsView = () => (
     <div className="w-full max-w-7xl mx-auto py-12">
       <ToastContainer position="top-right" theme="dark" />
-      <div className="flex justify-between items-center mb-10">
-        <button
-          onClick={handleBackToList}
-          className="flex items-center bg-gradient-to-r from-accent-teal to-cyan-400 text-white py-3 px-6 rounded-xl font-bold hover:scale-[1.02] transition shadow-2xl shadow-accent-teal/50"
-        >
-          <ChevronLeft size={24} className="mr-2" /> Back to Projects
-        </button>
-        <h1 className="text-4xl lg:text-5xl font-extrabold text-white text-center flex-grow">
-          <span className="text-accent-teal">{selectedGroup.projectTitle}</span>
-        </h1>
-        <button
-          onClick={() => toast.info("Delete coming soon")}
-          className="flex items-center bg-red-600/90 text-white py-3 px-6 rounded-xl font-bold hover:bg-red-700 hover:scale-[1.02] transition shadow-lg"
-        >
-          <Trash2 size={20} className="mr-2" /> Delete
-        </button>
-      </div>
 
       <div className="bg-white/10 backdrop-blur-xl p-8 rounded-3xl border border-white/30 mb-10 shadow-2xl shadow-indigo-500/20">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-white text-lg font-medium">
@@ -773,11 +755,12 @@ function ProjectManagement() {
             <div
               key={project._id}
               onClick={() => handleViewDetails(project)}
-              className="group bg-white/10 backdrop-blur-xl p-8 rounded-2xl border border-white/30 cursor-pointer transition-all duration-300 shadow-xl hover:shadow-cyan-400/50 hover:border-cyan-400 hover:scale-[1.05] transform"
+              className="group bg-white/10 backdrop-blur-xl p-8 rounded-2xl border border-white/30 cursor-pointer transition-all duration-300 shadow-xl hover:shadow-cyan-400/50 hover:border-cyan-400 hover:scale-[1.05] transform flex flex-col h-full"
             >
               <h3 className="text-2xl font-extrabold text-accent-teal mb-4 group-hover:text-cyan-400 transition">
                 {project.projectTitle}
               </h3>
+
               <ProjectInfoItem
                 label="Course / Semester"
                 value={`${project.division?.course || "N/A"} ${
@@ -785,7 +768,7 @@ function ProjectManagement() {
                 }`}
               />
 
-              <div className="space-y-3 text-white/90 font-medium">
+              <div className="space-y-3 text-white/90 font-medium mt-4">
                 <ProjectInfoItem
                   label="Tech"
                   value={project.projectTechnology || "N/A"}
@@ -800,7 +783,8 @@ function ProjectManagement() {
                   value={project.students?.length || 0}
                 />
               </div>
-              <button className="mt-6 flex items-center justify-center w-full bg-gradient-to-r from-accent-teal to-cyan-500 text-white py-3 rounded-xl font-extrabold group-hover:from-cyan-400 group-hover:to-teal-400 transition transform hover:scale-[1.02] shadow-lg">
+
+              <button className="mt-auto flex items-center justify-center w-full bg-gradient-to-r from-accent-teal to-cyan-500 text-white py-3 rounded-xl font-extrabold group-hover:from-cyan-400 group-hover:to-teal-400 transition transform hover:scale-[1.02] shadow-lg">
                 View Evaluation <List size={20} className="ml-2" />
               </button>
             </div>
