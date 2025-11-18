@@ -7,6 +7,7 @@ import guideRoutes from "./routes/guideRoutes.js";
 import studentRoutes from "./routes/studentRoutes.js";
 import guidePanelRoutes from "./routes/guidePanelRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import documentRoutes from "./routes/documents.js";
 
 connectDB();
 const app = express();
@@ -32,6 +33,9 @@ app.use("/api/student", studentRoutes);
 app.use("/api/guide-panel", guidePanelRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/guideroutes", guideRoutes);
+app.use("/api/documents", documentRoutes);
+
+app.use("/uploads", express.static("uploads"));
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -11,6 +11,7 @@ import {
   LogOut,
   LayoutGrid,
   User,
+  FileText,
 } from "lucide-react";
 import AdminSettings from "./AdminSettings";
 import GuideManagement from "./GuideManagement";
@@ -20,6 +21,7 @@ import ManageDivisions from "./ManageDivisions";
 import EvaluationParameters from "./EvaluationParameters";
 import ExamScheduleManagement from "./ExamScheduleManagement";
 import ProjectManagement from "./ProjectManagement";
+import DocumentsPage from "./DocumentsPage";
 import { notificationAPI } from "../../services/api"; // adjust path as needed
 
 // Placeholder components for future implementation
@@ -182,6 +184,13 @@ function Dashboard() {
       title: "Manage Students",
       description:
         "View, add, edit, and manage student profiles and registrations.",
+    },
+    {
+      name: "Documents",
+      icon: FileText, // lucide-react se
+      path: "documents",
+      title: "Manage Documents",
+      description: "Upload and manage project guidelines, forms, notices, etc.",
     },
   ];
 
@@ -362,6 +371,7 @@ function Dashboard() {
           <Route path="divisions" element={<ManageDivisions />} />
           <Route path="evaluation" element={<EvaluationParameters />} />
           <Route path="settings" element={<AdminSettings />} />
+          <Route path="documents" element={<DocumentsPage />} />
         </Routes>
       </main>
     </div>
