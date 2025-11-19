@@ -10,9 +10,12 @@ import {
   X,
   ChevronDown,
   List,
+  FileText,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { divisionAPI, enrollmentAPI } from "../../services/api";
+
+import generateStudentListPDF from "../../utils/pdf/generateStudentListPDF"; // <-- NEW
 
 // Reusable FilterDropdown component
 const FilterDropdown = ({
@@ -331,7 +334,6 @@ function ManageDivisions() {
   };
   // add enrollment
   const handleAddEnrollment = async () => {
-    // 1. Division ID Validation
     if (!newEnrollment.divisionId) {
       setMessage({
         text: "Division ID is missing. Cannot add enrollment.",
@@ -341,17 +343,12 @@ function ManageDivisions() {
       return;
     }
 
-    // 2. Enrollment Number Presence Validation
-    if (!newEnrollment.enrollmentNumber) {
-      setMessage({ text: "Please enter an enrollment number!", type: "error" });
-      setTimeout(() => setMessage({ text: "", type: "error" }), 3000);
-      return;
-    }
-
-    // 3. Enrollment Number Format Validation (Fixed to 8 digits)
-    if (!/^[A-Za-z]+\d{8}$/.test(newEnrollment.enrollmentNumber)) {
+    if (
+      !newEnrollment.enrollmentNumber ||
+      !/^\d{1,3}$/.test(newEnrollment.enrollmentNumber)
+    ) {
       setMessage({
-        text: "Enrollment number must be like BCA20253070 or MSCIT20243070 (letters followed by 8 digits)!",
+        text: "Please enter a valid 1-3 digit enrollment number!",
         type: "error",
       });
       setTimeout(() => setMessage({ text: "", type: "error" }), 3000);
@@ -359,35 +356,39 @@ function ManageDivisions() {
     }
 
     try {
-      // 4. Payload includes all three required fields
+      // Find the division object from your divisions list
+      const division = divisions.find(
+        (d) => d._id === newEnrollment.divisionId
+      );
+      if (!division) throw new Error("Division not found!");
+
+      // Use dynamic values from the division object
+      const courseName = division.course; // e.g., MSCIT
+      const year = division.year; // e.g., 2025
+      const semester = division.semester; // e.g., 3
+      const number = newEnrollment.enrollmentNumber.padStart(3, "0");
+
+      const fullEnrollmentNumber = `${courseName}${year}${semester}${number}`;
+
       const payload = {
         divisionId: newEnrollment.divisionId,
-        enrollmentNumber: newEnrollment.enrollmentNumber,
+        enrollmentNumber: fullEnrollmentNumber,
         name: newEnrollment.name,
       };
 
       const response = await enrollmentAPI.create(payload);
+      const newEnrollmentData = response.data.data;
 
-      const newEnrollmentData = response.data;
-
-      // 5. Data Consistency Fixes:
-      // a) Ensure division ID is present for crash prevention
-      if (!newEnrollmentData.division && !newEnrollmentData.divisionId) {
-        newEnrollmentData.divisionId = newEnrollment.divisionId;
-      }
-      // 🚨 FIX for Rendering: Ensure enrollmentNumber is present to display immediately
-      if (!newEnrollmentData.enrollmentNumber) {
-        newEnrollmentData.enrollmentNumber = newEnrollment.enrollmentNumber;
-      }
+      // Ensure data consistency
+      newEnrollmentData.divisionId = newEnrollment.divisionId;
+      newEnrollmentData.enrollmentNumber = fullEnrollmentNumber;
 
       setEnrollments([...enrollments, newEnrollmentData]);
       setShowAddEnrollmentModal(false);
-
-      // 6. State Reset Fix: Reset with all properties (including 'name')
       setNewEnrollment({ divisionId: "", enrollmentNumber: "", name: "" });
 
       setMessage({
-        text: `Enrollment ${newEnrollment.enrollmentNumber} added successfully!`,
+        text: `Enrollment ${fullEnrollmentNumber} added successfully!`,
         type: "success",
       });
       setTimeout(() => setMessage({ text: "", type: "success" }), 3000);
@@ -398,7 +399,6 @@ function ManageDivisions() {
           (error.response?.data?.message || error.message),
         type: "error",
       });
-      // 7. Error Message Fix: Ensure type is "error" when clearing an error message
       setTimeout(() => setMessage({ text: "", type: "error" }), 3000);
     }
   };
@@ -530,6 +530,18 @@ function ManageDivisions() {
                 aria-label="Delete all enrollments"
               >
                 <Trash2 size={20} className="mr-2" /> Delete All
+              </button>
+              <button
+                onClick={() => {
+                  const enrollments = getDivisionEnrollments(
+                    selectedDivision._id
+                  );
+                  generateStudentListPDF(selectedDivision, enrollments);
+                }}
+                className="flex items-center bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-opacity-90 hover:scale-105 transition-all duration-300 shadow-neumorphic border border-white/20 backdrop-blur-sm animate-pulse-once"
+                aria-label="Generate PDF"
+              >
+                <FileText size={20} className="mr-2" /> Generate PDF
               </button>
             </div>
           </div>
@@ -998,28 +1010,7 @@ function ManageDivisions() {
                     })
                   }
                   className="w-full p-3 bg-white/10 text-white rounded-lg border border-white/20 focus:outline-none focus:ring-2 focus:ring-accent-teal transition-all duration-300 hover:shadow-md"
-                  placeholder="e.g., BCA2025001"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="name"
-                  className="block text-lg font-semibold text-white mb-2"
-                >
-                  Student Name
-                </label>
-                <input
-                  id="name"
-                  type="text"
-                  value={newEnrollment.name}
-                  onChange={(e) =>
-                    setNewEnrollment({
-                      ...newEnrollment,
-                      name: e.target.value,
-                    })
-                  }
-                  className="w-full p-3 bg-white/10 text-white rounded-lg border border-white/20 focus:outline-none focus:ring-2 focus:ring-accent-teal transition-all duration-300 hover:shadow-md"
-                  placeholder="e.g., John Doe"
+                  placeholder="e.g., 001 to 999"
                 />
               </div>
             </div>

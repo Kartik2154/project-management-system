@@ -65,6 +65,7 @@ import {
 } from "../../controllers/admin/adminController.js";
 
 import {
+  getAllProjectEvaluations,
   getProjectEvaluationById,
   saveAllProjectEvaluations,
 } from "../../controllers/evaluationController.js";
@@ -126,8 +127,8 @@ router.delete("/guides/:id", deleteGuide);
 // get groups for the guides
 router.get("/admin/get-groups-by-guide/:guideId", getGroupsByGuide);
 
-// GET /api/admin/get-groups?year=2025
-router.get("/get-groups", getGroupsByYearOrCourse);
+// // GET /api/admin/get-groups?year=2025
+// router.get("/get-groups", getGroupsByYearOrCourse);
 
 // GET /api/admin/get-divisions
 router.get("/get-divisions", getDivisions);
@@ -293,6 +294,8 @@ router.post(
   protectAdmin,
   saveAllProjectEvaluations
 );
+// GET /api/admin/get-all-evaluations → returns EVERY evaluation for PDF
+router.get("/get-all-evaluations", protectAdmin, getAllProjectEvaluations);
 
 // GET /api/admin/groups/:groupId/project-evaluations
 router.get("/groups/:groupId/project-evaluations", getGroupProjectEvaluations);
