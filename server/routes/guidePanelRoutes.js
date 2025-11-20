@@ -10,8 +10,11 @@ import Feedback from "../models/feedback.js";
 import { sendEmail } from "../services/emailService.js";
 import GuideProjectEvaluation from "../models/guideProjectEvaluation.js";
 
+import { getAllExpertise } from "../controllers/expertiseController.js";
+
 const router = express.Router();
 
+router.get("/expertise", getAllExpertise);
 // All routes require authenticated guide
 router.use(protectGuide);
 
