@@ -269,12 +269,16 @@ function Dashboard() {
               )}
 
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-72 bg-white/20 backdrop-blur-lg rounded-lg border border-white/30 shadow-xl p-3 z-50 animate-fade-in-down">
-                  <h4 className="font-semibold text-white border-b border-white/20 pb-1 mb-2">
+                // FIX: Background changed to a solid dark color for high contrast
+                <div className="absolute right-0 mt-2 w-72 bg-slate-800 rounded-lg border border-cyan-400/30 shadow-2xl p-3 z-50 animate-fade-in-down">
+                  {/* Header: White text on dark background */}
+                  <h4 className="font-semibold text-white border-b border-white/30 pb-1 mb-2">
                     Notifications
                   </h4>
+
                   {notifications.length === 0 ? (
-                    <p className="text-gray-200 text-sm">No notifications</p>
+                    // No Notifications Text: Visible light gray text
+                    <p className="text-gray-400 text-sm">No notifications</p>
                   ) : (
                     notifications.slice(0, 6).map((n) => (
                       <div
@@ -286,13 +290,17 @@ function Dashboard() {
                           else if (n.type === "group")
                             navigate("/admin/dashboard/groups");
                         }}
-                        className={`p-2 mb-1 rounded-md text-sm cursor-pointer hover:bg-cyan-500/30 transition ${
+                        className={`p-2 mb-1 rounded-md text-sm cursor-pointer hover:bg-cyan-500/50 transition ${
+                          // Conditional Background/Text for Read/Unread
                           n.isRead
-                            ? "text-gray-300"
-                            : "bg-cyan-500/20 text-white"
+                            ? "text-gray-300" // Read: Slightly lighter gray text (still readable)
+                            : "bg-cyan-500/30 text-white font-medium" // Unread: White text on a slightly darker blue background
                         }`}
                       >
+                        {/* Message: Now clearly visible */}
                         {n.message}
+
+                        {/* Date/Time: Secondary text in light gray */}
                         <div className="text-xs text-gray-400 mt-1">
                           {new Date(n.createdAt).toLocaleString()}
                         </div>

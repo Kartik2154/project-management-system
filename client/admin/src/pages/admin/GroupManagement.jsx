@@ -680,6 +680,7 @@ function GroupManagement() {
                       className="bg-gray-800 text-white hover:bg-teal-500" // Added dark background and white text
                     >
                       {guide.name}
+                      {guide.expertise && ` (${guide.expertise})`}
                     </option>
                   ))}
                 </select>
