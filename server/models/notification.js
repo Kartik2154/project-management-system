@@ -2,15 +2,28 @@ import mongoose from "mongoose";
 
 const notificationSchema = new mongoose.Schema(
   {
-    type: {
+    receiverType: {
       type: String,
-      enum: ["guide", "group", "student", "system"],
+      enum: ["admin", "guide", "student"],
       required: true,
     },
+
+    receiverId: {
+      type: mongoose.Schema.Types.ObjectId,
+      refPath: "receiverType", // Dynamic reference!
+      required: true,
+    },
+
+    type: {
+      type: String,
+      required: true,
+    },
+
     message: {
       type: String,
       required: true,
     },
+
     isRead: {
       type: Boolean,
       default: false,
@@ -19,6 +32,4 @@ const notificationSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const Notification = mongoose.model("Notification", notificationSchema);
-
-export default Notification;
+export default mongoose.model("Notification", notificationSchema);

@@ -93,6 +93,27 @@ export const studentProtectedAPI = {
     });
   },
 
+  getMyRequests: () => {
+    const token = localStorage.getItem("studentToken");
+    return apiRequest("/student/requests/my-requests", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  },
+
+  createRequest: (data) => {
+    const token = localStorage.getItem("studentToken");
+    return apiRequest("/student/requests/create", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+  },
+
   checkGroup: () => {
     const token = localStorage.getItem("studentToken");
     return apiRequest("/student/check-group", {
