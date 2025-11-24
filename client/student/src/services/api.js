@@ -72,27 +72,8 @@ export const studentProtectedAPI = {
       },
     });
   },
-  getGuideDetails: () => {
-    const token = localStorage.getItem("studentToken");
-    return apiRequest("/student/guide-details", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-  },
 
-  createGroup: (payload) => {
-    const token = localStorage.getItem("studentToken");
-    return apiRequest("/student/create-group", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(payload),
-    });
-  },
-
+  // 🔥 CRUD Requests for Student
   getMyRequests: () => {
     const token = localStorage.getItem("studentToken");
     return apiRequest("/student/requests/my-requests", {
@@ -111,6 +92,38 @@ export const studentProtectedAPI = {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(data),
+    });
+  },
+
+  updateRequest: (requestId, data) => {
+    const token = localStorage.getItem("studentToken");
+    return apiRequest(`/student/requests/${requestId}`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+  },
+
+  deleteRequest: (requestId) => {
+    const token = localStorage.getItem("studentToken");
+    return apiRequest(`/student/requests/${requestId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  },
+
+  createGroup: (payload) => {
+    const token = localStorage.getItem("studentToken");
+    return apiRequest("/student/create-group", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
     });
   },
 

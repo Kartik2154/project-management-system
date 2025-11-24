@@ -71,6 +71,13 @@ import {
 } from "../../controllers/evaluationController.js";
 
 import {
+  getAllRequests,
+  deleteRequestByAdmin,
+  deleteRequest,
+  updateRequestStatusByAdmin,
+} from "../../controllers/requestController.js";
+
+import {
   getAllExpertise,
   addExpertise,
   updateExpertise,
@@ -305,5 +312,17 @@ router.get("/expertise", protectAdmin, getAllExpertise);
 router.post("/expertise", protectAdmin, addExpertise);
 router.put("/expertise/:id", protectAdmin, updateExpertise);
 router.delete("/expertise/:id", protectAdmin, deleteExpertise);
+
+// DELETE: Delete any request
+router.delete("/requests/:id", protectAdmin, deleteRequest);
+
+// Admin can see all requests
+router.get("/requests", protectAdmin, getAllRequests);
+
+// Admin can delete any request
+router.delete("/requests/:id", protectAdmin, deleteRequestByAdmin);
+
+// PATCH /api/admin/requests/:id/status → Admin updates request status
+router.patch("/requests/:id/status", protectAdmin, updateRequestStatusByAdmin);
 
 export default router;

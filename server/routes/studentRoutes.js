@@ -18,6 +18,8 @@ import { protectStudent } from "../middlewares/authMiddleware.js";
 import {
   createRequest,
   getMyRequests,
+  updateRequest,
+  deleteRequest,
 } from "../controllers/requestController.js";
 
 const router = express.Router();
@@ -43,8 +45,10 @@ router.get("/exam-schedules", protectStudent, getStudentExamSchedules);
 // Guide
 router.get("/guide-details", protectStudent, getAssignedGuide);
 
-// Requests (UPDATED)
+// CRUD for student
 router.post("/requests/create", protectStudent, createRequest);
 router.get("/requests/my-requests", protectStudent, getMyRequests);
+router.put("/requests/:id", protectStudent, updateRequest);
+router.delete("/requests/:id", protectStudent, deleteRequest);
 
 export default router;

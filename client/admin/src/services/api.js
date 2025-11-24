@@ -146,4 +146,16 @@ export const expertiseAPI = {
   delete: (id) => api.delete(`/expertise/${id}`),
 };
 
+// ✅ Requests API (Admin)
+export const requestAPI = {
+  // GET all student requests
+  getAll: () => api.get("/requests"),
+
+  // DELETE a request by ID
+  delete: (id) => api.delete(`/requests/${id}`),
+
+  // PATCH update request status by ID
+  update: (id, status) => api.patch(`/requests/${id}/status`, status),
+};
+
 export default api;
