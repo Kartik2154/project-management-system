@@ -215,7 +215,7 @@ function GroupManagement() {
 
   const dropdownOptions = useMemo(() => {
     const currentIds = new Set(currentMembers.map(m => m._id));
-    return (availableStudents || []).filter(s => !currentIds.has(s._id));
+    return (availableStudents || []).filter(s => !currentIds.has(s._id || s.id));
   }, [availableStudents, currentMembers]);
 
   // Render details view
@@ -277,7 +277,7 @@ function GroupManagement() {
             <h2 className="text-2xl font-bold text-white">Group Members</h2>
             <div className="space-y-4">
               {selectedGroup.members.map((member, index) => (
-                <div key={index} className="flex items-center justify-between bg-white/10 p-4 rounded-2xl border border-white/20">
+                <div key={member._id || member.id} className="flex items-center justify-between bg-white/10 p-4 rounded-2xl border border-white/20">
                   <div className="flex items-center">
                     <User size={20} className="text-white mr-3" />
                     <div className="flex flex-col">
@@ -511,7 +511,7 @@ function GroupManagement() {
                       <div className="bg-white/5 border border-white/10 rounded-lg max-h-32 overflow-y-auto">
                         {searchResults.map((student) => (
                           <div
-                            key={student._id}
+                            key={student._id || student.id}
                             onClick={() => handleAddMember(student)}
                             className="p-3 hover:bg-white/10 cursor-pointer border-b border-white/10 last:border-b-0"
                           >

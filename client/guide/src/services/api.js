@@ -238,13 +238,40 @@ export const projectAPI = {
 // Note: Based on backend routes, some endpoints may not be implemented yet
 export const guidePanelAPI = {
   // Dashboard - Fetch groups and announcements
+  // getDashboard: async () => {
+  //   try {
+  //     const [groupsData, announcementsData] = await Promise.all([
+  //       guidePanelAPI.getGroups().catch(() => []),
+  //       guidePanelAPI
+  //         .getCommunication({ type: "announcement" })
+  //         .catch(() => []),
+  //     ]);
+
+  //     return {
+  //       groups: groupsData || [],
+  //       announcements: announcementsData || [],
+  //       profile: null,
+  //     };
+  //   } catch (error) {
+  //     console.error("Error fetching dashboard data:", error);
+  //     return {
+  //       groups: [],
+  //       announcements: [],
+  //       profile: null,
+  //     };
+  //   }
+  // },
+
   getDashboard: async () => {
     try {
+      const guideUser = authAPI.getCurrentUser();
+      const guideId = guideUser?.id || guideUser?._id;
+
       const [groupsData, announcementsData] = await Promise.all([
         guidePanelAPI.getGroups().catch(() => []),
-        guidePanelAPI
-          .getCommunication({ type: "announcement" })
-          .catch(() => []),
+        guideId
+          ? guidePanelAPI.getGuideAnnouncements(guideId).catch(() => [])
+          : [],
       ]);
 
       return {
@@ -261,6 +288,15 @@ export const guidePanelAPI = {
       };
     }
   },
+
+  getGuideAnnouncements: async (guideId) => {
+    if (!guideId) return [];
+    const response = await apiRequest(`/guides/${guideId}/announcements`, {
+      method: "GET",
+    });
+    return response.data || [];
+  },
+
 
   // Group Management
   getGroups: async (params = {}) => {
