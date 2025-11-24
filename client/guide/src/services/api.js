@@ -507,4 +507,22 @@ export const notificationAPI = {
     }),
 };
 
+// ------------------------------
+// 🔹 EXPERTISE API (ONLY GET)
+export const expertiseAPI = {
+  getAll: async () => {
+    const res = await apiRequest("/expertise", { method: "GET" });
+    console.log("expertiseAPI raw response:", res);
+
+    // Fix: check both res.data and res.data.data
+    if (res?.data?.data && Array.isArray(res.data.data)) {
+      return res.data.data; // proper array
+    } else if (Array.isArray(res?.data)) {
+      return res.data; // fallback
+    } else {
+      return [];
+    }
+  },
+};
+
 export default apiRequest;

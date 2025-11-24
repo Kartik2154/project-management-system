@@ -25,6 +25,8 @@ import {
   rejectProjectProposal,
 } from "../controllers/guideController.js";
 
+import { getAllExpertise } from "../controllers/expertiseController.js";
+
 const router = express.Router();
 
 // ----------------------------------------------------------------------
@@ -71,6 +73,8 @@ router.post("/guides/:id/groups", protectGuide, createGroupForGuide);
 router.get("/guides/:id/groups/:groupId", protectGuide, getGroupByIdForGuide);
 router.put("/guides/:id/groups/:groupId", protectGuide, updateGroupForGuide);
 router.delete("/guides/:id/groups/:groupId", protectGuide, deleteGroupForGuide);
+
+router.get("/expertise", getAllExpertise);
 
 // ----------------------------------------------------------------------
 // 4. GUIDE PANEL ROUTES (Merged from guidePanelRoutes.js)

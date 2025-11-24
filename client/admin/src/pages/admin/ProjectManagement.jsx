@@ -137,7 +137,10 @@ function ProjectManagement() {
 
         const groups = groupsRes.data.data || [];
         setProjects(groups);
-        setEvaluationParameters(paramsRes.data.data || []);
+        const sortedParams = [...(paramsRes.data.data || [])].sort(
+          (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+        );
+        setEvaluationParameters(sortedParams);
       } catch (err) {
         toast.error("Failed to load data");
         console.error(err);

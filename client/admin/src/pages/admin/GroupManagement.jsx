@@ -629,50 +629,69 @@ function GroupManagement() {
 
         {/* Change Guide Modal (exact from design) */}
         {showChangeGuideModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fade-in">
-            <div className="bg-light-glass backdrop-blur-sm p-8 rounded-2xl shadow-neumorphic border border-white/20 w-full max-w-sm relative transform transition-all duration-200 scale-100 hover:scale-102">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-fade-in">
+            {/* Modal Content */}
+            <div className="bg-slate-800 p-8 rounded-2xl shadow-2xl shadow-cyan-500/30 border border-cyan-400/30 w-full max-w-sm relative transform transition-all duration-300 hover:scale-[1.01]">
               <button
                 onClick={() => setShowChangeGuideModal(false)}
-                className="absolute top-4 right-4 text-white/70 hover:text-white transition duration-200"
+                className="absolute top-4 right-4 text-white/70 hover:text-cyan-400 transition duration-200 p-1"
                 aria-label="Close modal"
               >
-                <X size={24} className="animate-icon-pulse" />
+                <X
+                  size={26}
+                  className="hover:rotate-90 transition duration-300"
+                />
               </button>
-              <h2 className="text-2xl font-bold text-white mb-6 text-center tracking-tight">
+
+              <h2 className="text-3xl font-extrabold text-teal-400 mb-6 text-center tracking-tight border-b border-white/10 pb-3">
                 Change Guide
               </h2>
+
               <label
                 htmlFor="new-guide-select"
-                className="block text-white text-sm font-semibold mb-2"
+                className="block text-white/90 text-sm font-semibold mb-2"
               >
                 Select a new guide
               </label>
+
               <div className="relative">
                 <select
                   id="new-guide-select"
-                  className="w-full p-3 bg-white/10 text-white rounded-lg border border-white/20 focus:outline-none focus:ring-2 focus:ring-accent-teal transition-all duration-200 shadow-neumorphic backdrop-blur-sm appearance-none cursor-pointer pr-8"
+                  className="w-full p-3 bg-white/10 text-white rounded-xl border border-white/30 focus:outline-none focus:ring-4 focus:ring-cyan-500/50 transition-all duration-300 shadow-inner appearance-none cursor-pointer pr-10"
                   style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2300b8d4'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
+                    // Use a slightly darker SVG for better contrast on the selected value
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%234c9c9e'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
                     backgroundRepeat: "no-repeat",
-                    backgroundPosition: "right 0.5rem center",
-                    backgroundSize: "1.5em",
+                    backgroundPosition: "right 0.75rem center",
+                    backgroundSize: "1.25em",
                   }}
                   value={newGuide}
                   onChange={(e) => setNewGuide(e.target.value)}
                 >
-                  <option value="">Select a guide</option>
+                  {/* --- CRITICAL FIX: Styling the options --- */}
+                  <option value="" className="text-gray-400 bg-gray-900">
+                    Select a guide
+                  </option>
                   {guides.map((guide) => (
-                    <option key={guide._id} value={guide.name}>
+                    // Applying distinct styling to options for visibility in the dropdown list
+                    <option
+                      key={guide._id}
+                      value={guide.name}
+                      className="bg-gray-800 text-white hover:bg-teal-500" // Added dark background and white text
+                    >
                       {guide.name}
+                      {guide.expertise && ` (${guide.expertise})`}
                     </option>
                   ))}
                 </select>
               </div>
-              <div className="flex justify-end gap-4 mt-6">
+
+              {/* Buttons */}
+              <div className="flex justify-end gap-4 mt-8">
                 <button
                   type="button"
                   onClick={() => setShowChangeGuideModal(false)}
-                  className="flex items-center bg-gray-600/80 text-white py-2 px-4 sm:px-3 rounded-lg font-semibold hover:bg-gray-700 hover:scale-105 transition duration-200 shadow-neumorphic border border-white/20 backdrop-blur-sm animate-pulse-once"
+                  className="flex items-center bg-gray-600/70 text-white py-2 px-5 rounded-xl font-bold hover:bg-gray-700 transition duration-200 shadow-md shadow-gray-900/50"
                   aria-label="Cancel changing guide"
                 >
                   Cancel
@@ -681,7 +700,7 @@ function GroupManagement() {
                   type="button"
                   onClick={handleSaveGuideChange}
                   disabled={!newGuide}
-                  className="flex items-center bg-gradient-to-r from-accent-teal to-cyan-500 text-white py-2 px-4 sm:px-3 rounded-lg font-semibold hover:bg-opacity-90 hover:scale-105 transition duration-200 shadow-neumorphic border border-white/20 backdrop-blur-sm animate-pulse-once disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center bg-gradient-to-r from-teal-500 to-cyan-600 text-white py-2 px-5 rounded-xl font-bold hover:from-teal-400 hover:to-cyan-500 transition duration-200 shadow-xl shadow-cyan-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
                   aria-label="Change guide"
                 >
                   Change

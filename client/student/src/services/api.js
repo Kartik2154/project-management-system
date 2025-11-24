@@ -25,6 +25,7 @@ const apiRequest = async (endpoint, options = {}) => {
   return data;
 };
 
+// PUBLIC (No Login Required)
 export const studentPublicAPI = {
   getDivisions: () => apiRequest("/student/divisions"),
   getPendingEnrollments: (divisionId) =>
@@ -41,10 +42,21 @@ export const studentPublicAPI = {
     }),
 };
 
+// PROTECTED (Login Required)
 export const studentProtectedAPI = {
   getProfile: () => {
     const token = localStorage.getItem("studentToken");
     return apiRequest("/student/profile", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  },
+
+  getExamSchedules: () => {
+    const token = localStorage.getItem("studentToken");
+    return apiRequest("/student/exam-schedules", {
       method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -60,6 +72,16 @@ export const studentProtectedAPI = {
       },
     });
   },
+  getGuideDetails: () => {
+    const token = localStorage.getItem("studentToken");
+    return apiRequest("/student/guide-details", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  },
+
   createGroup: (payload) => {
     const token = localStorage.getItem("studentToken");
     return apiRequest("/student/create-group", {
@@ -70,6 +92,28 @@ export const studentProtectedAPI = {
       body: JSON.stringify(payload),
     });
   },
+
+  getMyRequests: () => {
+    const token = localStorage.getItem("studentToken");
+    return apiRequest("/student/requests/my-requests", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  },
+
+  createRequest: (data) => {
+    const token = localStorage.getItem("studentToken");
+    return apiRequest("/student/requests/create", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+  },
+
   checkGroup: () => {
     const token = localStorage.getItem("studentToken");
     return apiRequest("/student/check-group", {
@@ -79,14 +123,29 @@ export const studentProtectedAPI = {
       },
     });
   },
+
+  // 🔥 GET COURSE-WISE ANNOUNCEMENTS
+  getCourseAnnouncements: (course) => {
+    const token = localStorage.getItem("studentToken");
+    return apiRequest(`/course-announcements?course=${course}`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  },
 };
 
-// ✅ Notifications API for student dashboard
+// ANNOUNCEMENTS API (STUDENT DASHBOARD)
+export const announcementAPI = {
+  // 🔥 Fetch all announcements
+  getAll: () => apiRequest("/student/announcements", { method: "GET" }),
+};
+
+// NOTIFICATIONS API
 export const notificationAPI = {
-  // Fetch all notifications (admin-related or general)
   getAll: () => apiRequest("/notifications"),
 
-  // Create a new notification (e.g., when a student creates a group)
   create: (payload) =>
     apiRequest("/notifications", {
       method: "POST",
@@ -94,13 +153,11 @@ export const notificationAPI = {
       body: JSON.stringify(payload),
     }),
 
-  // Mark single notification as read
   markRead: (id) =>
     apiRequest(`/notifications/${id}/read`, {
       method: "PATCH",
     }),
 
-  // Mark all notifications as read
   markAllRead: () =>
     apiRequest("/notifications/mark-all-read", {
       method: "PATCH",

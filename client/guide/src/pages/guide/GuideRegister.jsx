@@ -1,10 +1,10 @@
 // @ts-nocheck
 import { useNavigate, Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Input from "../../components/Input";
 import Button from "../../components/Button";
 import { authAPI } from "../../services/api";
-import { notificationAPI } from "../../services/api";
+import { notificationAPI, expertiseAPI } from "../../services/api";
 
 function GuideRegister() {
   const navigate = useNavigate();
@@ -17,6 +17,8 @@ function GuideRegister() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [expertiseOptions, setExpertiseOptions] = useState([]);
+  const [expertiseLoading, setExpertiseLoading] = useState(true);
 
   const handleInputChange = (e) => {
     setFormData({
@@ -24,6 +26,25 @@ function GuideRegister() {
       [e.target.id]: e.target.value,
     });
   };
+
+  useEffect(() => {
+    const loadExpertise = async () => {
+      try {
+        setExpertiseLoading(true);
+        const list = await expertiseAPI.getAll();
+        console.log("Loaded expertise list:", list); // should now show 6 items
+        setExpertiseOptions(list);
+      } catch (error) {
+        console.error("Error loading expertise:", error);
+        setError("Failed to load expertise list.");
+        setExpertiseOptions([]);
+      } finally {
+        setExpertiseLoading(false);
+      }
+    };
+
+    loadExpertise();
+  }, []);
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -83,16 +104,6 @@ function GuideRegister() {
       setLoading(false);
     }
   };
-
-  const expertiseOptions = [
-    "java",
-    "laravel",
-    "ios",
-    "seo",
-    "php",
-    "flutter",
-    "mern",
-  ];
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-900 p-4 font-sans bg-gradient-to-br from-gray-800 to-gray-900">
@@ -154,11 +165,18 @@ function GuideRegister() {
                 className="w-full p-3 bg-white/10 text-white rounded-lg border border-white/20 focus:outline-none focus:ring-2 focus:ring-accent-teal transition-all duration-300"
               >
                 <option value="">Select Expertise</option>
-                {expertiseOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option.charAt(0).toUpperCase() + option.slice(1)}
-                  </option>
-                ))}
+
+                {expertiseLoading ? (
+                  <option>Loading...</option>
+                ) : expertiseOptions.length > 0 ? (
+                  expertiseOptions.map((item) => (
+                    <option key={item._id} value={item._id}>
+                      {item.name}
+                    </option>
+                  ))
+                ) : (
+                  <option>No expertise available</option>
+                )}
               </select>
             </div>
             <Input

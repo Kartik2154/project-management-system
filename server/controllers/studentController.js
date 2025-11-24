@@ -3,6 +3,9 @@ import Division from "../models/division.js";
 import Group from "../models/group.js";
 import jwt from "jsonwebtoken";
 import { notificationAPI } from "../../client/student/src/services/api.js";
+import Announcement from "../models/courseAnnouncement.js";
+import ExamSchedule from "../models/examSchedule.js";
+import Guide from "../models/guide.js";
 
 // GET /api/student/divisions - list active divisions
 export const getActiveDivisions = async (req, res) => {
@@ -122,6 +125,34 @@ export const loginStudent = async (req, res) => {
   }
 };
 
+// Get schedules for logged-in student
+export const getStudentExamSchedules = async (req, res) => {
+  try {
+    const studentId = req.student._id;
+
+    // Fetch student with division
+    const student = await Student.findById(studentId).populate("division");
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const division = student.division;
+    if (!division) {
+      return res.status(400).json({ message: "Student division not found" });
+    }
+
+    // Extract course from division
+    const course = division.course; // Example: "MCA", "BCA", "MSCIT"
+
+    // Fetch ONLY this course's exam schedules
+    const schedules = await ExamSchedule.find({ course }).sort({ date: 1 });
+
+    return res.json({ schedules });
+  } catch (error) {
+    console.log("Exam schedule error:", error);
+    res.status(500).json({ message: "Failed to fetch exam schedules" });
+  }
+};
 // GET /api/student/check-group - check if student is in any group
 export const checkStudentGroup = async (req, res) => {
   try {
@@ -271,6 +302,16 @@ export const createGroup = async (req, res) => {
   }
 };
 
+export const getAllAnnouncements = async (req, res) => {
+  try {
+    const announcements = await Announcement.find().sort({ date: -1 });
+    res.status(200).json(announcements);
+  } catch (error) {
+    console.error("Error fetching announcements:", error);
+    res.status(500).json({ message: "Failed to fetch announcements" });
+  }
+};
+
 // GET /api/student/profile - get current student profile
 export const getStudentProfile = async (req, res) => {
   try {
@@ -293,5 +334,39 @@ export const getStudentProfile = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch profile" });
+  }
+};
+
+// GET /api/student/guide-details
+export const getAssignedGuide = async (req, res) => {
+  try {
+    const studentId = req.student._id;
+
+    // Find the student's group
+    const group = await Group.findOne({ students: studentId }).populate(
+      "guide"
+    );
+
+    if (!group) {
+      return res.json({ hasGuide: false, guide: null });
+    }
+
+    if (!group.guide) {
+      return res.json({ hasGuide: false, guide: null });
+    }
+
+    const { name, email, phone, expertise } = group.guide;
+
+    return res.json({
+      hasGuide: true,
+      guide: {
+        name,
+        email,
+        phone,
+        expertise,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch guide details" });
   }
 };
