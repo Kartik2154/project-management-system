@@ -72,6 +72,15 @@ export const studentProtectedAPI = {
       },
     });
   },
+  getGuideDetails: () => {
+    const token = localStorage.getItem("studentToken");
+    return apiRequest("/student/guide-details", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  },
 
   createGroup: (payload) => {
     const token = localStorage.getItem("studentToken");

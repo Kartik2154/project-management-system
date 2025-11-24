@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 import { notificationAPI } from "../../client/student/src/services/api.js";
 import Announcement from "../models/courseAnnouncement.js";
 import ExamSchedule from "../models/examSchedule.js";
+import Guide from "../models/guide.js";
 
 // GET /api/student/divisions - list active divisions
 export const getActiveDivisions = async (req, res) => {
@@ -333,5 +334,39 @@ export const getStudentProfile = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch profile" });
+  }
+};
+
+// GET /api/student/guide-details
+export const getAssignedGuide = async (req, res) => {
+  try {
+    const studentId = req.student._id;
+
+    // Find the student's group
+    const group = await Group.findOne({ students: studentId }).populate(
+      "guide"
+    );
+
+    if (!group) {
+      return res.json({ hasGuide: false, guide: null });
+    }
+
+    if (!group.guide) {
+      return res.json({ hasGuide: false, guide: null });
+    }
+
+    const { name, email, phone, expertise } = group.guide;
+
+    return res.json({
+      hasGuide: true,
+      guide: {
+        name,
+        email,
+        phone,
+        expertise,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch guide details" });
   }
 };

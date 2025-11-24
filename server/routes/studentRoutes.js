@@ -6,6 +6,7 @@ import {
   loginStudent,
   checkStudentGroup,
   getAvailableStudents,
+  getAssignedGuide,
   createGroup,
   getStudentProfile,
   getAllAnnouncements,
@@ -29,5 +30,7 @@ router.post("/create-group", protectStudent, createGroup);
 router.get("/announcements", getAllAnnouncements);
 
 router.get("/exam-schedules", protectStudent, getStudentExamSchedules);
+
+router.get("/guide-details", protectStudent, getAssignedGuide);
 
 export default router;
