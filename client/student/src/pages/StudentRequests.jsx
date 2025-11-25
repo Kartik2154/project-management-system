@@ -7,6 +7,8 @@ function StudentRequests() {
   const [message, setMessage] = useState("");
   const [type, setType] = useState("admin");
   const [requests, setRequests] = useState([]);
+  const [editId, setEditId] = useState(null);
+  const [editMessage, setEditMessage] = useState("");
 
   const fetchRequests = async () => {
     const res = await studentProtectedAPI.getMyRequests();
@@ -27,6 +29,22 @@ function StudentRequests() {
 
     setMessage("");
     fetchRequests();
+  };
+
+  const handleUpdate = async (id) => {
+    if (!editMessage.trim()) return alert("Message is empty");
+
+    await studentProtectedAPI.updateRequest(id, { message: editMessage });
+    setEditId(null);
+    setEditMessage("");
+    fetchRequests();
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Are you sure you want to delete this request?")) {
+      await studentProtectedAPI.deleteRequest(id);
+      fetchRequests();
+    }
   };
 
   return (
@@ -79,10 +97,54 @@ function StudentRequests() {
                 <span className="text-accent-teal font-bold">Type:</span>{" "}
                 {req.type}
               </p>
-              <p>
-                <span className="text-accent-teal font-bold">Message:</span>{" "}
-                {req.message}
-              </p>
+
+              {/* Editable Message */}
+              {editId === req._id ? (
+                <>
+                  <textarea
+                    className="w-full p-2 bg-gray-800 text-white rounded-lg mb-2"
+                    value={editMessage}
+                    onChange={(e) => setEditMessage(e.target.value)}
+                  />
+                  <button
+                    onClick={() => handleUpdate(req._id)}
+                    className="bg-green-600 px-4 py-1 rounded-lg mr-2"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => setEditId(null)}
+                    className="bg-gray-600 px-4 py-1 rounded-lg"
+                  >
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p>
+                    <span className="text-accent-teal font-bold">Message:</span>{" "}
+                    {req.message}
+                  </p>
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={() => {
+                        setEditId(req._id);
+                        setEditMessage(req.message);
+                      }}
+                      className="bg-blue-600 px-4 py-1 rounded-lg"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(req._id)}
+                      className="bg-red-600 px-4 py-1 rounded-lg"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </>
+              )}
+
               <p>
                 <span className="text-accent-teal font-bold">Status:</span>{" "}
                 {req.status}
