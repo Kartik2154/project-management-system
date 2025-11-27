@@ -83,7 +83,6 @@ function StudentDashboard() {
     };
   }, []);
 
-  const goToProjectSubmission = () => navigate("/student/project-submission");
   const goToGroupManagement = () => navigate("/student/group-management");
   const goToFeedback = () => navigate("/student/feedback");
   const goToAnnouncements = () => navigate("/student/announcements");
@@ -92,6 +91,7 @@ function StudentDashboard() {
   const goToProfile = () => navigate("/student/profile");
   const goToGroupChat = () => navigate("/student/group-chat");
   const goToCreateGroup = () => navigate("/student/create-group");
+  const goToDocuments = () => navigate("/student/documents");
 
   const handleProfileSettings = () => {
     setIsSettingsMenuOpen(false);
@@ -241,12 +241,6 @@ function StudentDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
               {
-                icon: FileText,
-                title: "Project Submission",
-                description: "Submit your project work and documents",
-                onClick: goToProjectSubmission,
-              },
-              {
                 icon: MessageSquare,
                 title: "Group Chat",
                 description: "Chat with your group members",
@@ -254,9 +248,15 @@ function StudentDashboard() {
               },
               {
                 icon: MessageSquare,
-                title: "Feedback",
-                description: "View guide feedback and suggestions",
+                title: "Communicate",
+                description: "Communicate with guide and admin",
                 onClick: goToFeedback,
+              },  
+              {
+                icon: FileText,
+                title: "Documents",
+                description: "Download resources shared by admin",
+                onClick: goToDocuments,
               },
               {
                 icon: Bell,
